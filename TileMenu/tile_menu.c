@@ -29,9 +29,7 @@ TileMenu * tile_menu_create(GRect frame, Window * window, unsigned tiles, unsign
             tile_height * ((int)DIVIDE_UP(tiles,tiles_per_row)),
         frame.size.w
     ));
-                     
-    //layer_add_child(window_get_root_layer(window), scroll_layer_get_layer(menu->layer));
-    
+
     for(unsigned i = 0; i < tiles; ++i) {
         unsigned col = i % tiles_per_row;
         unsigned row = DIVIDE_UP((i+1),tiles_per_row);
@@ -42,8 +40,7 @@ TileMenu * tile_menu_create(GRect frame, Window * window, unsigned tiles, unsign
             tile_width,
             tile_height
         );
-        
-        //TextLayer * tile = text_layer_create(tile_bounds);
+
         Layer * tile = layer_create(tile_bounds);
         /*
         APP_LOG(APP_LOG_LEVEL_DEBUG, "Creating Tile: %p {%d,%d,%d,%d}", 
@@ -70,7 +67,6 @@ void tile_menu_destroy(TileMenu * menu) {
                 xorlist_iterator_next(&itr)) {
                 if(xorlist_iterator_curr(&itr)) {
                     layer_destroy((Layer*)xorlist_iterator_curr(&itr));
-                    //text_layer_destroy((TextLayer*)xorlist_iterator_curr(&itr));
                 }
             }
         }
@@ -85,8 +81,6 @@ void tile_menu_draw(TileMenu * menu) {
         for(XORListIterator itr = xorlist_iterator_forward(menu->tiles);
                 xorlist_iterator_has_next(&itr);
                 xorlist_iterator_next(&itr)) {
-            //Layer * layer = text_layer_get_layer((TextLayer*)xorlist_iterator_curr(&itr));
-            //APP_LOG(APP_LOG_LEVEL_DEBUG, "Adding Layer: {%p}", text_layer); 
             Layer * layer = (Layer*)xorlist_iterator_curr(&itr);
             scroll_layer_add_child(menu->layer, layer);
         }
@@ -131,51 +125,4 @@ bool tile_menu_at_end(TileMenu * menu) {
 
 bool tile_menu_at_begin(TileMenu * menu) {
     return (menu ? !xorlist_iterator_has_prev(&menu->iterator) : true);
-}
-
-/*
-void tile_menu_set_background_color(TileMenu * menu, GColor color) {
-    if(menu)
-        for(XORListIterator itr = xorlist_iterator_forward(menu->tiles);
-                xorlist_iterator_has_next(&itr);
-                xorlist_iterator_next(&itr)) {
-            text_layer_set_background_color((TextLayer*)xorlist_iterator_curr(&itr), color);
-        }
-}
-
-void tile_menu_set_font(TileMenu * menu, GFont font) {
-    if(menu)
-        for(XORListIterator itr = xorlist_iterator_forward(menu->tiles);
-            xorlist_iterator_has_next(&itr);
-            xorlist_iterator_next(&itr)) {
-            text_layer_set_font((TextLayer*)xorlist_iterator_curr(&itr), font);
-        }
-}
-
-void tile_menu_set_text(TileMenu * menu, const char * str) {
-    if(menu)
-        for(XORListIterator itr = xorlist_iterator_forward(menu->tiles);
-            xorlist_iterator_has_next(&itr);
-            xorlist_iterator_next(&itr)) {
-            text_layer_set_text((TextLayer*)xorlist_iterator_curr(&itr), str);
-        }
-}
-
-void tile_menu_set_text_alignment(TileMenu * menu, GTextAlignment alignment) {
-    if(menu)
-        for(XORListIterator itr = xorlist_iterator_forward(menu->tiles);
-            xorlist_iterator_has_next(&itr);
-            xorlist_iterator_next(&itr)) {
-            text_layer_set_text_alignment((TextLayer*)xorlist_iterator_curr(&itr), alignment);
-        }
-}
-*/
-
-void tile_menu_set_text_color(TileMenu * menu, GColor color) {
-    if(menu)
-        for(XORListIterator itr = xorlist_iterator_forward(menu->tiles);
-            xorlist_iterator_has_next(&itr);
-            xorlist_iterator_next(&itr)) {
-            text_layer_set_text_color((TextLayer*)xorlist_iterator_curr(&itr), color);
-        }
 }
