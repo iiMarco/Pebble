@@ -79,8 +79,11 @@ XORListIterator xorlist_iterator_reverse(XORList * list);
  *          based on the direction of the @XORListIterator when initialised.
  *          Likewise, 'Prev' is the @XORItem that preceeded the current position.
  */
+bool            xorlist_iterator_at_begin(XORListIterator * itr);
+bool            xorlist_iterator_at_end(XORListIterator * itr);
 bool            xorlist_iterator_has_next(XORListIterator * itr);
 bool            xorlist_iterator_has_prev(XORListIterator * itr);
+bool            xorlist_iterator_has_curr(XORListIterator * itr);
 
 /** Iterator Accessors **
  *
