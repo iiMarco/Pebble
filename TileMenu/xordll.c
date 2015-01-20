@@ -116,13 +116,24 @@ XORListIterator xorlist_iterator_reverse(XORList * list) {
     return itr;
 }
 
+bool xorlist_iterator_at_end(XORListIterator * itr) {
+    return (itr ? !itr->next && !itr->curr : false);
+}
+
+bool xorlist_iterator_at_begin(XORListIterator * itr) {
+    return (itr ? !itr->prev && !itr->curr: false);
+}
 
 bool xorlist_iterator_has_next(XORListIterator * itr) {
-    return (itr ? itr->next || itr->curr : false);
+    return (itr ? itr->next : false);
 }
 
 bool xorlist_iterator_has_prev(XORListIterator * itr) {
-    return (itr ? itr->prev || itr->curr : false);
+    return (itr ? itr->prev : false);
+}
+
+bool xorlist_iterator_has_curr(XORListIterator * itr) {
+    return (itr ? itr->curr : false);
 }
 
 void * xorlist_iterator_next(XORListIterator * itr) {
