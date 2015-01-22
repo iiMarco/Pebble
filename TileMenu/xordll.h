@@ -1,3 +1,6 @@
+/** XORList 
+ *     Written By: Mark Zammit
+ */
 #include <pebble.h>
 
 /** @XORItem Generic Type **
