@@ -1,3 +1,6 @@
+/** XORList 
+ *     Written By: Mark Zammit
+ */
 #include "xordll.h"
 
 // Quick References:
