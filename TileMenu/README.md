@@ -4,7 +4,7 @@ A tiled style menu which uses generic ```Layer``` objects bound by a Menu window
 TileMenu uses a ```ScrollLayer``` base Layer to allow for scrollable functionality like Pebble's ```SimpleMenuLayer``` and ```MenuLayer```.
 TileMenu manages all the memory creation and deletion within it's bounds and can be destroyed simply by calling the ```tile_menu_destroy``` method.
 
-TileMenu also implements a custom Selector which changes direction based on the start and end bounds of TileMenu. Custom key operations can be programmed for the TileMenu.
+TileMenu also implements a custom Selector which changes direction based on the start and end bounds of TileMenu. This will also shift the scrollable menu up and down respectively. The default SELECT buttons can be overriden if desired but the tile selection must be managed by the application (N.B. this will not remove the custom scroll behaviour when reaching to out-of-bounds tiles). 
 
 A basic implementation of TileMenu would be the following:
 
@@ -15,13 +15,6 @@ A basic implementation of TileMenu would be the following:
 
 Window * window;	
 static TileMenu * menu;
-
-// Click Configurator to assign callbacks
-void click_config_provider(void *context) {
-    window_single_click_subscribe(BUTTON_ID_UP, up_click_handler);
-    window_single_click_subscribe(BUTTON_ID_DOWN, down_click_handler);
-    window_single_click_subscribe(BUTTON_ID_SELECT, select_click_handler);
-}
 
 // UP Button Config to move the selector to the relative previous tile
 void up_click_handler(ClickRecognizerRef recognizer, void *context) {
@@ -34,6 +27,18 @@ void down_click_handler(ClickRecognizerRef recognizer, void *context) {
 }
 
 void select_click_handler(ClickRecognizerRef recognizer, void *context) {
+    // ...
+}
+
+// Click Configurator to assign callbacks
+void click_config_provider(void *context) {
+    window_single_click_subscribe(BUTTON_ID_UP, up_click_handler);
+    window_single_click_subscribe(BUTTON_ID_DOWN, down_click_handler);
+    window_single_click_subscribe(BUTTON_ID_SELECT, select_click_handler);
+}
+
+// Handler for when the TileMenu displays a new row of tiles
+void content_changed_handler(TileMenu * menu, void * context) {
     // ...
 }
 
@@ -76,6 +81,13 @@ void window_load(Window * window) {
     tile_menu_draw(menu);
     // Adds the TileMenu to the stack
     layer_add_child(window_get_root_layer(window), tile_menu_get_layer(menu));
+    
+    // Optional override of default SELECT button handler and TileMenuCallback
+    // MUST be called after layer_add_child(window_get_root_layer(window), tile_menu_get_layer(menu)) !!
+    tile_menu_set_callbacks(menu, (TileMenuCallbacks) {
+    	.click_config_provider = click_config_provider,
+    	.content_changed_handler = content_changed_handler
+    });
 }
 
 void window_unload(Window * window) {
