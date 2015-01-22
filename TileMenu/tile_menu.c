@@ -23,6 +23,8 @@ struct _tile_menu_ {
     XORList * tiles;
     TileMenuIterator iterator;
     TileMenuSelector * selector;
+    TileMenuCallback content_changed_handler;
+    void * context;
     GPoint ulhs, lrhs;
 };
 
@@ -51,12 +53,10 @@ static void tile_menu_click_config_provider(void *context) {
 
 static void tile_menu_up_click_handler(ClickRecognizerRef recognizer, void *context) {
     tile_menu_set_selected_prev((TileMenu*)context);
-    //scroll_layer_set_content_offset(((TileMenu*)context)->layer, GPoint(0, 56), true);
 }
  
 static void tile_menu_down_click_handler(ClickRecognizerRef recognizer, void *context) {
     tile_menu_set_selected_next((TileMenu*)context);
-    //scroll_layer_set_content_offset(((TileMenu*)context)->layer, GPoint(0, -1*56), true);
 }
 
 static void tile_menu_select_click_handler(ClickRecognizerRef recognizer, void *context) {
@@ -104,6 +104,7 @@ void tile_menu_selector_set(TileMenu * menu, TileMenuSelector * selector, Layer 
         return;
 
     if(selector->inverter) {
+        bool content_changed = false;
         GSize max_bounds = layer_get_bounds(parent).size;
         // Base offset
         GPoint offset = selector->offset;
@@ -120,9 +121,9 @@ void tile_menu_selector_set(TileMenu * menu, TileMenuSelector * selector, Layer 
         GPoint end = finish.origin;
         
         // Determines the relative left and right side boundaries
-        GRect bounds = layer_get_frame(parent);
-        int rhs = bounds.origin.x + bounds.size.w - tile.w;
-        int lhs = bounds.origin.x;
+        //GRect bounds = layer_get_frame(parent);
+        //int rhs = bounds.origin.x + bounds.size.w - tile.w;
+        //int lhs = bounds.origin.x;
 
         // Relative on-screen start coordinates
         GPoint rel_start = from.origin;
@@ -139,6 +140,7 @@ void tile_menu_selector_set(TileMenu * menu, TileMenuSelector * selector, Layer 
             // Sets the new relative frame
             rframe_top.y -= rframe_top.y - abs(offset.y);
             rframe_bot.y = rframe_top.y + max_bounds.h;
+            content_changed = true;
         }
         // Shift DOWN
         else if (end.y >= rframe_bot.y) {
@@ -146,6 +148,7 @@ void tile_menu_selector_set(TileMenu * menu, TileMenuSelector * selector, Layer 
             // Sets the new relative frame
             rframe_top.y += abs(abs(offset.y) - rframe_top.y);
             rframe_bot.y = rframe_top.y + max_bounds.h;
+            content_changed = true;
         }
         // Correct the relative end tile coordinates based on any movement
         rel_end = GPoint(rel_end.x, end.y - rframe_top.y);
@@ -180,6 +183,10 @@ void tile_menu_selector_set(TileMenu * menu, TileMenuSelector * selector, Layer 
         selector->offset = offset;
         scroll_layer_set_content_offset(menu->layer, offset, true);
         animate_layer(inverter_layer_get_layer(selector->inverter), &true_start, &true_end,0,0);
+        
+        if(content_changed && menu->content_changed_handler) {
+            menu->content_changed_handler(menu, menu->context);
+        }
     } else {
         selector->inverter = inverter_layer_create(to);
         layer_add_child(parent, inverter_layer_get_layer(selector->inverter));
@@ -206,7 +213,8 @@ TileMenu * tile_menu_create(GRect frame, Window * window, unsigned tiles, unsign
     
     menu->layer = scroll_layer_create(frame);
     menu->tiles = xorlist_create();
-    
+    menu->content_changed_handler = NULL;
+    menu->context = menu;
     menu->ulhs = GPoint(frame.origin.x, frame.origin.y);
     menu->lrhs = menu->ulhs;
     
@@ -224,15 +232,6 @@ TileMenu * tile_menu_create(GRect frame, Window * window, unsigned tiles, unsign
         menu->lrhs = GPoint(tile_bounds.origin.x, tile_bounds.origin.y);
         
         Layer * tile = layer_create(tile_bounds);
-        /*
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "Creating Tile: %p {%d,%d,%d,%d}", 
-            text_layer,
-            tile_bounds.origin.x,
-            tile_bounds.origin.y,
-            tile_bounds.size.h,
-            tile_bounds.size.w
-        ); 
-        */
         xorlist_push_back(menu->tiles, (void*)tile);
     }
     
@@ -282,12 +281,30 @@ void tile_menu_draw(TileMenu * menu) {
     }
 }
 
-void tile_menu_set_click_callbacks(TileMenu * menu, ClickConfigProvider click_config_provider) {
-    // ...
+void  tile_menu_set_context(TileMenu * menu, void * context) {
+    if(!menu)
+        return;
+    menu->context = context;
+}
+
+void tile_menu_set_callbacks(TileMenu * menu, TileMenuCallbacks callbacks) {
+    if(!menu)
+        return;
+
+    if(callbacks.click_config_provider && layer_get_window(scroll_layer_get_layer(menu->layer))) {
+        window_set_click_config_provider_with_context(
+            layer_get_window(scroll_layer_get_layer(menu->layer)), 
+            callbacks.click_config_provider, 
+            menu->context
+        );
+    }
+    if(callbacks.content_changed_handler) {
+        menu->content_changed_handler = callbacks.content_changed_handler;
+    }
 }
 
 GRect tile_menu_get_bounds(TileMenu * menu) {
-    return (menu ? layer_get_bounds(scroll_layer_get_layer(menu->layer)) : GRect(-1,-1,-1,-1));
+    return (menu ? layer_get_bounds(scroll_layer_get_layer(menu->layer)) : GRectZero);
 }
 
 Layer * tile_menu_get_next(TileMenu * menu) {
